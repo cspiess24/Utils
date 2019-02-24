@@ -1,10 +1,8 @@
 import boto3
 
-image_name = "F5 Networks Licensed Hourly BIGIP-12.1.3.3-0.0.1 Best 25MBPS*"
+image_name = "CentOS Linux 7 x86_64 HVM EBS ENA 1804_02*"
 region_names = []
 ami_ids = {}
-
-boto3.setup_default_session(profile_name='matr-ops-research')
 
 client = boto3.client('ec2')
 
