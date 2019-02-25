@@ -1,0 +1,39 @@
+---
+- name: postgresql | Add repository
+  yum:
+    name: https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-2.noarch.rpm
+    state: present
+
+- name: postgresql | ensure a list of packages installed
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - postgresql10
+    - postgresql10-libs
+    - postgresql10-server
+
+# TODO: Need to add initdb here
+
+- name: postgresql | start service and enable at boot
+  service:
+    name: postgresql-10
+    state: started
+    enabled: yes
+
+- name: postgresql | create database
+  postgresql_db:
+    name: ncp
+
+- name: postgresql | create user
+  postgresql_user:
+    db: ncp
+    name: django
+    password: ceec4eif7ya
+
+- name: postgresql | grant all on database
+  postgresql_privs:
+    db: ncp
+    privs: ALL
+    type: database
+    role: django
