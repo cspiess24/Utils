@@ -6,6 +6,7 @@
     packages:
     - httpd24u
     - httpd24u-mod_ssl
+  when: enabled | default(false)
 
 - name: web_server | copy django http config
   copy:

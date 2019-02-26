@@ -25,7 +25,7 @@
 - name: ncp | install ncp requirements
   pip:
     requirements: /opt/ncp/requirements.txt
-    virtualenv: /opt/ncp/venv
+    virtualenv: /opt/ncp/ncp/venv
     virtualenv_command: /usr/bin/python3.6 -m venv
 
 - name: ncp | copy configuration template
