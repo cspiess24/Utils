@@ -12,8 +12,17 @@
     - postgresql10
     - postgresql10-libs
     - postgresql10-server
+    - python-psycopg2
 
-# TODO: Need to add initdb here
+- name: postgresql | check if data directory exists
+  stat:
+    path: /var/lib/pgsql/10/data
+  register: data_directory
+
+- name: postgresql | run initdb
+  command: /usr/pgsql-10/bin/postgresql-10-setup initdb
+  register: initdb
+  when: not data_directory.stat.exists
 
 - name: postgresql | start service and enable at boot
   service:
@@ -24,12 +33,14 @@
 - name: postgresql | create database
   postgresql_db:
     name: ncp
+  become_user: postgres
 
 - name: postgresql | create user
   postgresql_user:
     db: ncp
     name: django
-    password: ceec4eif7ya
+    password: "{{ lookup('password', '/tmp/psql_password chars=ascii_letters,digits,hexdigits,punctuation') }}"
+  become_user: postgres
 
 - name: postgresql | grant all on database
   postgresql_privs:
@@ -37,3 +48,4 @@
     privs: ALL
     type: database
     role: django
+  become_user: postgres

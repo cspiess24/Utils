@@ -4,3 +4,4 @@
   tasks:
     - import_tasks: postgres.yaml
     - import_tasks: ncp.yaml
+    - import_tasks: web_server.yaml

@@ -1,9 +1,8 @@
 ---
 - name: ncp | Add repository
-  yum_repository:
-    name: Inline with upstream Stable
-    description: IUS YUM repo
-    baseurl: https://centos7.iuscommunity.org/ius-release.rpm
+  yum:
+    name: https://centos7.iuscommunity.org/ius-release.rpm
+    state: present
 
 - name: ncp | ensure a list of packages installed
   yum:
@@ -17,18 +16,21 @@
 
 - name: ncp | clone repo
   git:
-    repo: ssh://git@bitbucket.org:cspiess24/ncp.git
+    # repo: ssh://cspiess24@bitbucket.org/ncp.git
+    repo: https://cspiess24@bitbucket.org/cspiess24/ncp.git
     dest: /opt/ncp
+    accept_hostkey: yes
+  when: enabled | default(false)
 
 - name: ncp | install ncp requirements
   pip:
-    requirements: requirements.txt
-    virtualenv: venv
-    executable: pip3
+    requirements: /opt/ncp/requirements.txt
+    virtualenv: /opt/ncp/venv
+    virtualenv_command: /usr/bin/python3.6 -m venv
 
 - name: ncp | copy configuration template
   template:
-    src: /coniguration.py.j2
+    src: ../templates/configuration.py.j2
     dest: /opt/ncp/ncp/ncp/configuration.py
     owner: bin
     group: wheel

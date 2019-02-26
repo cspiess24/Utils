@@ -5,7 +5,7 @@ information for your environment
 
 # This should be the FQDN you are using to access NCP
 # https://docs.djangoproject.com/en/2.0/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = [{{ allowed_hosts }}]
+ALLOWED_HOSTS = ["*"]
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
@@ -13,14 +13,14 @@ ALLOWED_HOSTS = [{{ allowed_hosts }}]
 DATABASE = {
     'ENGINE': 'django.db.backends.postgresql',
     'NAME': 'ncp',
-    'USER': '{{ user }}',
-    'PASSWORD': '{{password}}',
+    'USER': 'django',
+    'PASSWORD': "{{ lookup('file', '/tmp/psql_password') }}",
     'HOST': 'localhost',
     'PORT': '',
 }
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '{{ secret_key }}'
+SECRET_KEY = "{{ lookup('password', '/tmp/secret_key chars=ascii_letters,digits,hexdigits,punctuation') }}"
 
 # Specify one or more name and email address tuples representing administrators.
 # These people will be notified of application errors
@@ -44,4 +44,4 @@ EMAIL = {
 CSRF_COOKIE_SECURE = False
 DEBUG = True
 SESSION_COOKIE_SECURE = False
-TIME_ZONE = {{ time_zone }}
+TIME_ZONE = "{{ time_zone | default('UTC') }}"
