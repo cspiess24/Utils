@@ -1,5 +1,5 @@
 ---
-- name: ncp | Add repository
+- name: ncp | Add yum repository
   yum:
     name: https://centos7.iuscommunity.org/ius-release.rpm
     state: present
@@ -9,6 +9,8 @@
     name: "{{ packages }}"
   vars:
     packages:
+    - httpd24u
+    - httpd24u-mod_ssl
     - python36u
     - python36u-pip
     - python36u-mod_wsgi
@@ -16,17 +18,20 @@
 
 - name: ncp | clone repo
   git:
-    # repo: ssh://cspiess24@bitbucket.org/ncp.git
-    repo: https://cspiess24@bitbucket.org/cspiess24/ncp.git
+    repo: "https://{{ gituser }}:{{ gitpassword }}@bitbucket.org/cspiess24/ncp.git"
     dest: /opt/ncp
     accept_hostkey: yes
-  when: enabled | default(false)
+    force: yes
+  notify:
+    - restart apache
 
 - name: ncp | install ncp requirements
   pip:
     requirements: /opt/ncp/requirements.txt
-    virtualenv: /opt/ncp/ncp/venv
+    virtualenv: /opt/ncp/venv
     virtualenv_command: /usr/bin/python3.6 -m venv
+  notify:
+    - restart apache
 
 - name: ncp | copy configuration template
   template:
@@ -35,4 +40,46 @@
     owner: bin
     group: wheel
     mode: 0644
+  notify:
+    - restart apache
 
+- name: ncp | copy django http config
+  copy:
+    src: ../files/django.conf
+    dest: /etc/httpd/conf.d/django.conf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify:
+    - restart apache
+
+- name: ncp | Create logs directory
+  file:
+    path: /opt/ncp/ncp/logs
+    state: directory
+    owner: apache
+    group: apache
+    mode: 0764
+
+- name: ncp | run database migrations
+  django_manage:
+    command: migrate
+    app_path: /opt/ncp/ncp
+    settings: ncp.settings
+    pythonpath: /usr/bin/python3.6
+    virtualenv: /opt/ncp/venv
+
+- name: ncp | django collectstatic
+  django_manage:
+    command: collectstatic
+    app_path: /opt/ncp/ncp
+    settings: ncp.settings
+    pythonpath: /usr/bin/python3.6
+    virtualenv: /opt/ncp/venv
+
+- name: ncp | start service and enable at boot
+  service:
+    name: httpd
+    state: started
+    enabled: yes

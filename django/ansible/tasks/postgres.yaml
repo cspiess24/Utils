@@ -1,5 +1,5 @@
 ---
-- name: postgresql | Add repository
+- name: postgresql | Add yum repository
   yum:
     name: https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-2.noarch.rpm
     state: present
@@ -16,8 +16,10 @@
 
 - name: postgresql | check if data directory exists
   stat:
-    path: /var/lib/pgsql/10/data
+    path: /var/lib/pgsql/10/data/pg_hba.conf
   register: data_directory
+
+# TODO: Add logic for updating pg_hba.conf ident to md5. Run postgres restart
 
 - name: postgresql | run initdb
   command: /usr/pgsql-10/bin/postgresql-10-setup initdb
