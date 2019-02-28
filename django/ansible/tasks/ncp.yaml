@@ -78,6 +78,14 @@
     pythonpath: /usr/bin/python3.6
     virtualenv: /opt/ncp/venv
 
+- name: ncp | django createsuperuser
+  django_manage:
+    command: "createsuperuser --noinput --username=admin --email=admin@example.com"
+    app_path: /opt/ncp/ncp
+    settings: ncp.settings
+    pythonpath: /usr/bin/python3.6
+    virtualenv: /opt/ncp/venv
+
 - name: ncp | start service and enable at boot
   service:
     name: httpd
