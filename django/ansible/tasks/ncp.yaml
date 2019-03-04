@@ -78,13 +78,17 @@
     pythonpath: /usr/bin/python3.6
     virtualenv: /opt/ncp/venv
 
-- name: ncp | django createsuperuser
-  django_manage:
-    command: "createsuperuser --noinput --username=admin --email=admin@example.com"
-    app_path: /opt/ncp/ncp
-    settings: ncp.settings
-    pythonpath: /usr/bin/python3.6
-    virtualenv: /opt/ncp/venv
+- name: ncp | check if data directory exists
+  stat:
+    path: /tmp/dsu_password
+  register: dsu_password
+
+# TODO: look at password module wirting to local system disk
+- name: ncp | create django superuser
+  command: echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@myproject.com', {{ lookup('password', '/var/dsu_password') }})" | /opt/ncp/venv/bin/python /opt/ncp/ncp/manage.py shell
+  when: not dsu_password.stat.exists
+  notify:
+    - print password
 
 - name: ncp | start service and enable at boot
   service:
