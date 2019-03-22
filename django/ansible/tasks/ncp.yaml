@@ -90,18 +90,23 @@
     pythonpath: /usr/bin/python3.6
     virtualenv: /opt/ncp/venv
 
-# TODO: fix this logic so you get a useful return
-- name: ncp | check if superuser exists
-  command: echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists()" | /opt/ncp/venv/bin/python /opt/ncp/ncp/manage.py shell
-  register: dsu_password
-- debug:
-    var: dsu_password
+- name: ncp | check if django superuser exists
+  django_manage:
+    command: shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); print(User.objects.filter(username='admin').exists())"
+    app_path: /opt/ncp/ncp
+    settings: ncp.settings
+    pythonpath: /usr/bin/python3.6
+    virtualenv: /opt/ncp/venv
+  register: user_exists
 
-# TODO: update when statement once logic above is fixed
-# TODO: Look into superuser not being created appropriately. NOTE: command works if run manually.
 - name: ncp | create django superuser
-  command: echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@myproject.com', '{{ lookup('password', '/tmp/dsu_password') }}')" | /opt/ncp/venv/bin/python /opt/ncp/ncp/manage.py shell
-  when: dsu_password
+  django_manage:
+    command: shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@myproject.com', '{{ lookup('password', '/tmp/dsu_password') }}')"
+    app_path: /opt/ncp/ncp
+    settings: ncp.settings
+    pythonpath: /usr/bin/python3.6
+    virtualenv: /opt/ncp/venv
+  when: user_exists.out.find("False") != -1
 
 - name: ncp | start service and enable at boot
   service:
