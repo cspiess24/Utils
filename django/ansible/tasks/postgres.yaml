@@ -19,12 +19,21 @@
     path: /var/lib/pgsql/10/data/pg_hba.conf
   register: data_directory
 
-# TODO: Add logic for updating pg_hba.conf ident to md5. Run postgres restart
-
 - name: postgresql | run initdb
   command: /usr/pgsql-10/bin/postgresql-10-setup initdb
   register: initdb
   when: not data_directory.stat.exists
+
+- name: postgresql | update pg_hba.conf
+  copy:
+    src: ../files/pg_hba.conf
+    dest: /var/lib/pgsql/10/data/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: 0600
+    backup: yes
+  notify:
+    - restart postgres
 
 - name: postgresql | start service and enable at boot
   service:

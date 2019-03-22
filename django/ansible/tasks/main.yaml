@@ -7,11 +7,10 @@
     service:
       name: httpd
       state: restarted
-  - name: print password
-    vars:
-      dsu_password_file: /tmp/dsu_password
-    command: "cat {{ dsu_password_file | quote }}"
-    register: output
+  - name: restart postgres
+    service:
+      name: postgresql-10
+      state: restarted
 
   tasks:
     - import_tasks: postgres.yaml

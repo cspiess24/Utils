@@ -62,6 +62,18 @@
     group: apache
     mode: 0764
 
+- name: create log files
+  copy:
+    content: ""
+    dest: "{{ item }}"
+    force: no
+    group: apache
+    owner: root
+    mode: 0770
+  with_items:
+    - /opt/ncp/ncp/logs/deployment.log
+    - /opt/ncp/ncp/logs/django.log
+
 - name: ncp | run database migrations
   django_manage:
     command: migrate
@@ -78,17 +90,18 @@
     pythonpath: /usr/bin/python3.6
     virtualenv: /opt/ncp/venv
 
-- name: ncp | check if data directory exists
-  stat:
-    path: /tmp/dsu_password
+# TODO: fix this logic so you get a useful return
+- name: ncp | check if superuser exists
+  command: echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists()" | /opt/ncp/venv/bin/python /opt/ncp/ncp/manage.py shell
   register: dsu_password
+- debug:
+    var: dsu_password
 
-# TODO: look at password module wirting to local system disk
+# TODO: update when statement once logic above is fixed
+# TODO: Look into superuser not being created appropriately. NOTE: command works if run manually.
 - name: ncp | create django superuser
-  command: echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@myproject.com', {{ lookup('password', '/var/dsu_password') }})" | /opt/ncp/venv/bin/python /opt/ncp/ncp/manage.py shell
-  when: not dsu_password.stat.exists
-  notify:
-    - print password
+  command: echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@myproject.com', '{{ lookup('password', '/tmp/dsu_password') }}')" | /opt/ncp/venv/bin/python /opt/ncp/ncp/manage.py shell
+  when: dsu_password
 
 - name: ncp | start service and enable at boot
   service:
