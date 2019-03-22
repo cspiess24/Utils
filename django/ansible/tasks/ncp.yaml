@@ -62,7 +62,7 @@
     group: apache
     mode: 0764
 
-- name: create log files
+- name: ncp | create log files
   copy:
     content: ""
     dest: "{{ item }}"
